@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoltGuard BMS — 4S Lithium-Ion EV Battery Management System &amp; Cell Balancing Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css?v=20261101_01" />
+</head>
+<body>
+
+  <header class="top-bar">
+    <div class="brand-group">
+      <div class="brand-icon">BMS</div>
+      <div class="brand-title">
+        <h1>
+          VoltGuard 4S EV Battery Management Studio
+          <span class="badge-ev">4S1P NMC LI-ION · MOSFET SHUNT · OVP/OTP</span>
+        </h1>
+        <p>Interactive Electric Vehicle Battery Pack Telemetry, Passive Shunt Cell Balancing &amp; Thermal Runaway Protection</p>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button id="btn-scen-unbal" class="btn">⚠️ Unbalanced Pack (ΔV = 289 mV)</button>
+      <button id="btn-scen-bal" class="btn btn-bal">✨ Auto-Balance &amp; Equalize Pack</button>
+      <button id="btn-scen-otp" class="btn btn-fault">🔥 Simulate Thermal Runaway (OTP &gt; 60°C)</button>
+    </div>
+  </header>
+
+  <main class="main-grid">
+
+    <div class="col-stack">
+
+      <div id="alert-banner" class="alert-banner warn"></div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-lbl">Pack Voltage (4S)</div>
+          <div id="kpi-vpack" class="kpi-val">16.20 V</div>
+          <div id="kpi-vpack-sub" class="kpi-sub">Avg SoC: 78.6%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Cell Voltage Spread (ΔV)</div>
+          <div id="kpi-delta" class="kpi-val">289 mV</div>
+          <div id="kpi-delta-sub" class="kpi-sub">Target &le; 35 mV</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Peak Cell Temp</div>
+          <div id="kpi-temp" class="kpi-val">31.2°C</div>
+          <div id="kpi-temp-sub" class="kpi-sub">OTP Limit: 60.0°C</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Main HV Contactor</div>
+          <div id="kpi-contactor" class="kpi-val">CLOSED</div>
+          <div id="kpi-contactor-sub" class="kpi-sub">MOSFET Switch</div>
+        </div>
+      </div>
+
+      <!-- 4S NMC Cell Stack -->
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">🔋 4S1P NMC Lithium-Ion Series Cell Stack &amp; Bleed Shunts</span>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Non-Linear OCV(SoC) + I·R_int Model</span>
+        </div>
+        <div class="panel-body">
+          <div id="cells-grid" class="cells-grid"></div>
+        </div>
+      </section>
+
+      <!-- Real-Time Cell Voltage Convergence Chart -->
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">📈 Real-Time Cell Voltage Convergence Oscilloscope (V_cell 1–4)</span>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Observe ΔV shrinking during Shunt Balancing</span>
+        </div>
+        <div class="panel-body">
+          <div style="width: 100%; height: 195px; background: #050811; border: 1px solid var(--border-col); border-radius: 8px; overflow: hidden;">
+            <canvas id="bms-chart-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="col-stack">
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">🎛️ BMS Balancing &amp; Thermal Controls</span>
+        </div>
+        <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px;">
+          <button id="btn-toggle-bal" class="btn" style="width: 100%;">⚡ Enable MOSFET Shunt Cell Balancing</button>
+          <button id="btn-toggle-fan" class="btn" style="width: 100%;">❄️ Enable Active Thermal Cooling &amp; Clear OTP</button>
+
+          <div style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-col);">
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 6px;">
+              <span>Pack Charge / Discharge Current</span>
+              <span id="val-current" style="color: #38bdf8; font-family: 'JetBrains Mono', monospace;">+10 A</span>
+            </div>
+            <input id="slider-current" type="range" min="-35" max="35" step="1" value="10" style="width: 100%; accent-color: #10b981; cursor: pointer;" />
+            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+              <span>-35A (Discharge)</span>
+              <span>0A (Idle)</span>
+              <span>+35A (Fast Charge)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+  </main>
+
+  <script src="js/engine/bms.js?v=20261101_01"></script>
+  <script src="js/app.js?v=20261101_01"></script>
+</body>
+</html>

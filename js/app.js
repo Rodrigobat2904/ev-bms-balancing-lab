@@ -37,7 +37,9 @@ class VoltGuardApp {
 
   seedHistory() {
     this.historyV = [[], [], [], []];
-    for (let i = 0; i < 60; i++) {
+    this.bms.balancingEnabled = true;
+    for (let i = 0; i < this.maxHistory; i++) {
+      this.bms.updateTelemetry(0.08);
       this.bms.cells.forEach((c, idx) => {
         this.historyV[idx].push(c.vTerm);
       });
@@ -102,28 +104,28 @@ class VoltGuardApp {
       <span>Fault Status: ${t.faultCode}</span>
     `;
 
-    this.kpiVpack.style.color = '#38bdf8';
+    this.kpiVpack.style.color = '#ff7733';
     this.kpiVpack.textContent = `${t.packVoltage.toFixed(2)} V`;
     this.kpiVpackSub.textContent = `Avg SoC: ${t.avgSoc}% | I = ${t.packCurrent.toFixed(1)} A`;
 
-    this.kpiDelta.style.color = t.deltaMV <= 35 ? '#10b981' : '#f59e0b';
+    this.kpiDelta.style.color = t.deltaMV <= 35 ? '#a3e635' : '#ff5500';
     this.kpiDelta.textContent = `${t.deltaMV} mV`;
     this.kpiDeltaSub.textContent = t.deltaMV <= 35 ? 'Balanced (< 35 mV)' : 'Imbalance Detected!';
 
-    this.kpiTemp.style.color = t.maxTemp >= 55 ? '#f43f5e' : '#10b981';
+    this.kpiTemp.style.color = t.maxTemp >= 55 ? '#ff2a55' : '#a3e635';
     this.kpiTemp.textContent = `${t.maxTemp}°C`;
     this.kpiTempSub.textContent = `OTP Cutoff Threshold: 60.0°C`;
 
-    this.kpiContactor.style.color = t.contactorClosed ? '#10b981' : '#f43f5e';
+    this.kpiContactor.style.color = t.contactorClosed ? '#a3e635' : '#ff2a55';
     this.kpiContactor.textContent = t.contactorClosed ? 'CLOSED (ON)' : 'TRIPPED OPEN';
     this.kpiContactorSub.textContent = t.contactorClosed ? 'HV Bus Energized' : 'Safety Cutoff Active';
 
-    this.btnToggleBal.className = `btn ${this.bms.balancingEnabled ? 'btn-bal' : ''}`;
+    this.btnToggleBal.className = `ev-btn ev-btn-wide ${this.bms.balancingEnabled ? 'btn-bal' : ''}`;
     this.btnToggleBal.textContent = this.bms.balancingEnabled
       ? '⚡ Passive MOSFET Shunt Balancing: ACTIVE'
       : '⚡ Enable MOSFET Shunt Cell Balancing';
 
-    this.btnToggleFan.className = `btn ${this.bms.coolingFanEnabled ? 'btn-bal' : ''}`;
+    this.btnToggleFan.className = `ev-btn ev-btn-wide ${this.bms.coolingFanEnabled ? 'btn-bal' : ''}`;
     this.btnToggleFan.textContent = this.bms.coolingFanEnabled
       ? '❄️ Active Liquid/Fan Thermal Cooling: ON (Reset OTP)'
       : '❄️ Enable Active Thermal Cooling & Clear OTP';
@@ -136,22 +138,27 @@ class VoltGuardApp {
 
   renderCells() {
     this.cellsGrid.innerHTML = this.bms.cells.map(c => {
-      const fillCol = c.tempC >= 58 ? '#f43f5e' : (c.shunting ? '#f59e0b' : '#10b981');
+      const fillCol = c.tempC >= 58
+        ? 'linear-gradient(90deg, #991b1b, #ff2a55)'
+        : (c.shunting ? 'linear-gradient(90deg, #b45309, #ff5500)' : 'linear-gradient(90deg, #3f6212, #84cc16)');
       return `
-        <div class="cell-card ${c.shunting ? 'shunting' : ''}">
-          <div class="cell-head">
-            <span>CELL #0${c.id} (NMC)</span>
-            <span style="color:${c.tempC >= 55 ? '#f43f5e' : '#94a3b8'}">${c.tempC.toFixed(1)}°C</span>
+        <div class="cell-pouch-row ${c.shunting ? 'shunting' : ''}">
+          <div class="pouch-top">
+            <span style="color:#ffffff;">POUCH CELL #0${c.id} // NMC-21700</span>
+            <span style="color:${c.tempC >= 55 ? '#ff2a55' : '#a3e635'}">TEMP: ${c.tempC.toFixed(1)}°C</span>
           </div>
-          <div class="battery-bar-outer">
-            <div class="battery-bar-fill" style="height:${c.soc}%;background:${fillCol};"></div>
-            <div class="battery-bar-txt">
+          <div class="pouch-bar-track">
+            <div class="pouch-bar-fill" style="width:${c.soc}%;background:${fillCol};"></div>
+            <div class="pouch-bar-overlay">
               <span>${c.vTerm.toFixed(3)} V</span>
-              <span style="font-size:0.78rem;color:#cbd5e1;">SoC: ${c.soc.toFixed(1)}%</span>
+              <span>SoC: ${c.soc.toFixed(1)}%</span>
             </div>
           </div>
-          <div class="shunt-badge ${c.shunting ? 'on' : 'off'}">
-            ${c.shunting ? '🔥 SHUNT BLEEDING (6.8Ω ON)' : 'SHUNT MOSFET: OFF'}
+          <div class="pouch-shunt-status">
+            <span style="color:${c.shunting ? '#ff7733' : '#71717a'}">
+              ${c.shunting ? '🔥 MOSFET SHUNT BLEEDING (6.8Ω ON)' : '● SHUNT MOSFET: STANDBY OFF'}
+            </span>
+            <span style="color:#a19eb5;">I_bleed: ${c.shunting ? (c.vTerm / 6.8).toFixed(2) : '0.00'} A</span>
           </div>
         </div>
       `;

@@ -3,125 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VOLTGUARD EV-BMS // Carbon Supercar 4S Battery Telemetry &amp; Shunt Balancing Cockpit</title>
+  <title>VoltGuard BMS — 4S Lithium-Ion Battery Management &amp; Cell Balancing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=20261101_02" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css?v=20261101_03" />
 </head>
 <body>
 
-  <!-- SUPERCAR EV TELEMETRY HEADER -->
-  <header class="ev-cockpit-bar">
-    <div class="ev-brand">
-      <div class="hv-hazard-badge">⚡ HV 4S1P</div>
+  <!-- TOP MINIMALIST HEADER -->
+  <header class="top-bar">
+    <div class="brand-group">
+      <div class="brand-badge">4S</div>
       <div>
-        <div class="ev-series">POWERTRAIN BATTERY MANAGEMENT SYSTEM // NMC 21700 · PASSIVE SHUNT · OVP/OTP</div>
-        <h1>VOLTGUARD EV-BMS — CELL BALANCING &amp; THERMAL SAFETY COCKPIT</h1>
+        <h1>VoltGuard BMS <span class="sub-tag">NMC Li-Ion · Passive Shunt · OVP/OTP</span></h1>
+        <p>4S1P EV Battery Pack Telemetry, MOSFET Shunt Cell Balancing &amp; Thermal Protection</p>
       </div>
     </div>
 
-    <div class="ev-mode-selectors">
-      <button id="btn-scen-unbal" class="ev-btn ev-btn-orange">⚠️ UNBALANCED PACK (ΔV = 289 mV)</button>
-      <button id="btn-scen-bal" class="ev-btn ev-btn-lime">✨ AUTO-EQUALIZE CELLS (ΔV &lt; 10 mV)</button>
-      <button id="btn-scen-otp" class="ev-btn ev-btn-red">🔥 INJECT THERMAL RUNAWAY (OTP &gt; 60°C)</button>
+    <div class="scenario-group">
+      <button id="btn-scen-unbal" class="btn-seg">Unbalanced Pack (289 mV)</button>
+      <button id="btn-scen-bal" class="btn-seg btn-seg-active">Equalize Cells (&lt; 10 mV)</button>
+      <button id="btn-scen-otp" class="btn-seg">Thermal Runaway (&gt; 60°C)</button>
     </div>
   </header>
 
-  <!-- DIAGNOSTIC TELEMETRY RIBBON -->
-  <div id="alert-banner" class="alert-banner warn"></div>
+  <main class="dashboard-wrap">
 
-  <!-- ASYMMETRIC SUPERCAR COCKPIT: LEFT = VERTICAL 4S BATTERY TOWER | RIGHT = TELEMETRY & SCOPE -->
-  <main class="ev-cockpit-grid">
+    <!-- SUBTLE STATUS BAR -->
+    <div id="alert-banner" class="alert-banner ok"></div>
 
-    <!-- LEFT TOWER: VERTICAL 4S1P POUCH/PRISMATIC BATTERY STACK ENCLOSURE -->
-    <aside class="battery-tower-enclosure">
-      <div class="tower-header">
-        <div>
-          <div class="tower-sub">HIGH-VOLTAGE TRACTION MODULE</div>
-          <div class="tower-title">4S1P NMC SERIES CELL STACK</div>
-        </div>
-        <span class="tower-bus-pill">BUS: +16.8V MAX</span>
+    <!-- ROW 1: FULL-WIDTH 4-CELL HORIZONTAL BATTERY RIBBON -->
+    <section class="cells-ribbon-section">
+      <div class="section-head">
+        <span class="sec-title">4S1P Series Lithium-Ion Cell Stack (OCV + I·R_int Model)</span>
+        <span class="sec-meta">Passive Shunt Bleed Threshold: ΔV &gt; 12 mV (R_shunt = 6.8 Ω)</span>
       </div>
+      <div id="cells-grid" class="cells-ribbon"></div>
+    </section>
 
-      <div id="cells-grid" class="vertical-cell-stack"></div>
+    <!-- ROW 2: BOTTOM SPLIT (LEFT = CONVERGENCE CHART + KPI STRIP | RIGHT = BMS CONTROLS) -->
+    <div class="bottom-split">
 
-      <div class="tower-footer">
-        <span>SHUNT RESISTOR: R_bleed = 6.8 Ω / CELL</span>
-        <span>OCV(SoC) + I·R_int</span>
-      </div>
-    </aside>
-
-    <!-- RIGHT COCKPIT: SPEEDOMETER GAUGES, DRIVE/BALANCE CONSOLE & CONVERGENCE SCOPE -->
-    <section class="cockpit-right-stack">
-
-      <!-- 4 ANGULAR CARBON TELEMETRY GAUGES -->
-      <div class="gauges-row">
-        <div class="carbon-gauge">
-          <div class="gauge-lbl">PACK BUS VOLTAGE (4S)</div>
-          <div id="kpi-vpack" class="gauge-val">16.20 V</div>
-          <div id="kpi-vpack-sub" class="gauge-sub">Avg SoC: 78.6%</div>
-        </div>
-        <div class="carbon-gauge">
-          <div class="gauge-lbl">CELL SPREAD (ΔV_max-min)</div>
-          <div id="kpi-delta" class="gauge-val">289 mV</div>
-          <div id="kpi-delta-sub" class="gauge-sub">Target &le; 35 mV</div>
-        </div>
-        <div class="carbon-gauge">
-          <div class="gauge-lbl">CORE PEAK TEMPERATURE</div>
-          <div id="kpi-temp" class="gauge-val">31.2°C</div>
-          <div id="kpi-temp-sub" class="gauge-sub">OTP Trip: 60.0°C</div>
-        </div>
-        <div class="carbon-gauge">
-          <div class="gauge-lbl">MAIN HV PYRO-CONTACTOR</div>
-          <div id="kpi-contactor" class="gauge-val">CLOSED</div>
-          <div id="kpi-contactor-sub" class="gauge-sub">HV Bus Energized</div>
-        </div>
-      </div>
-
-      <!-- MIDDLE POWERTRAIN & BALANCING SWITCHGEAR CONSOLE -->
-      <div class="powertrain-console">
-        <div class="console-card">
-          <div class="console-head">
-            <span>⚡ ACTIVE SHUNT BALANCING &amp; LIQUID THERMAL COOLING</span>
-            <span class="papaya-tag">BMS HARDWARE ACTUATORS</span>
+      <!-- Left: Unified KPI Strip + Clean White Convergence Oscilloscope -->
+      <section class="card chart-card">
+        <div class="inline-kpi-bar">
+          <div class="ik-item">
+            <span class="ik-lbl">Pack Voltage (4S)</span>
+            <strong id="kpi-vpack" class="ik-val">16.20 V</strong>
+            <small id="kpi-vpack-sub" class="ik-sub">Avg SoC: 78.6%</small>
           </div>
-          <div class="actuator-btns">
-            <button id="btn-toggle-bal" class="ev-btn ev-btn-wide">⚡ Enable MOSFET Shunt Cell Balancing</button>
-            <button id="btn-toggle-fan" class="ev-btn ev-btn-wide">❄️ Enable Active Thermal Cooling &amp; Clear OTP</button>
+          <div class="ik-item">
+            <span class="ik-lbl">Cell Spread (ΔV)</span>
+            <strong id="kpi-delta" class="ik-val">289 mV</strong>
+            <small id="kpi-delta-sub" class="ik-sub">Target &le; 35 mV</small>
+          </div>
+          <div class="ik-item">
+            <span class="ik-lbl">Peak Cell Temp</span>
+            <strong id="kpi-temp" class="ik-val">31.2°C</strong>
+            <small id="kpi-temp-sub" class="ik-sub">OTP Limit: 60.0°C</small>
+          </div>
+          <div class="ik-item">
+            <span class="ik-lbl">HV Contactor</span>
+            <strong id="kpi-contactor" class="ik-val">CLOSED</strong>
+            <small id="kpi-contactor-sub" class="ik-sub">Bus Energized</small>
           </div>
         </div>
 
-        <div class="console-card">
-          <div class="console-head">
-            <span>🏎️ TRACTION INVERTER / SUPERCHARGER CURRENT BUS</span>
-            <span id="val-current" class="lime-readout">+10 A (CHARGE)</span>
-          </div>
-          <input id="slider-current" type="range" min="-35" max="35" step="1" value="10" class="papaya-slider" />
-          <div class="slider-labels">
-            <span>-35A (TRACK LAUNCH)</span>
-            <span>0A (STANDBY)</span>
-            <span>+35A (DC SUPERCHARGE)</span>
-          </div>
+        <div class="chart-head">
+          <span class="sec-title">Real-Time Cell Voltage Convergence Trajectory (V_cell 1–4)</span>
+          <span class="sec-meta">Continuous 50Hz BMS Telemetry</span>
         </div>
-      </div>
-
-      <!-- BOTTOM WIDE 4-CHANNEL VOLTAGE CONVERGENCE TELEMETRY OSCILLOSCOPE -->
-      <div class="convergence-panel">
-        <div class="console-head" style="padding: 10px 16px; border-bottom: 1px solid #26232f;">
-          <span>📈 4-CHANNEL CELL VOLTAGE CONVERGENCE TELEMETRY (V_cell 1..4 vs TIME)</span>
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #a3e635;">REAL-TIME ΔV EQUALIZATION TRACE</span>
-        </div>
-        <div class="scope-carbon-box">
+        <div class="chart-box">
           <canvas id="bms-chart-canvas"></canvas>
         </div>
-      </div>
+      </section>
 
-    </section>
+      <!-- Right: Minimalist BMS Balancing & Current Controls -->
+      <aside class="card controls-card">
+        <div class="chart-head">
+          <span class="sec-title">BMS Hardware Actuators</span>
+          <span class="sec-meta">Closed-Loop Protection</span>
+        </div>
+
+        <div class="controls-body">
+          <div class="ctrl-block">
+            <span class="ctrl-label">Cell Balancing &amp; Thermal Management</span>
+            <button id="btn-toggle-bal" class="btn-action">
+              Passive MOSFET Shunt Balancing: Active
+            </button>
+            <button id="btn-toggle-fan" class="btn-action">
+              Enable Active Thermal Cooling &amp; Reset OTP
+            </button>
+          </div>
+
+          <div class="ctrl-block">
+            <div class="slider-top">
+              <span class="ctrl-label" style="margin:0;">Pack Charge / Discharge Current</span>
+              <strong id="val-current" class="curr-readout">+10 A (CHARGE)</strong>
+            </div>
+            <input id="slider-current" type="range" min="-35" max="35" step="1" value="10" class="clean-range" />
+            <div class="range-ticks">
+              <span>-35A (Discharge)</span>
+              <span>0A (Standby)</span>
+              <span>+35A (Fast Charge)</span>
+            </div>
+          </div>
+
+          <div class="safety-matrix">
+            <div class="sm-item"><span>OVP Cutoff</span><strong>4.24 V</strong></div>
+            <div class="sm-item"><span>UVP Cutoff</span><strong>3.00 V</strong></div>
+            <div class="sm-item"><span>OTP Thermal</span><strong>60.0 °C</strong></div>
+            <div class="sm-item"><span>Shunt Load</span><strong>6.8 Ω</strong></div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
 
   </main>
 
-  <script src="js/engine/bms.js?v=20261101_02"></script>
-  <script src="js/app.js?v=20261101_02"></script>
+  <script src="js/engine/bms.js?v=20261101_03"></script>
+  <script src="js/app.js?v=20261101_03"></script>
 </body>
 </html>

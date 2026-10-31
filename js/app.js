@@ -38,8 +38,10 @@ class VoltGuardApp {
   seedHistory() {
     this.historyV = [[], [], [], []];
     this.bms.balancingEnabled = true;
+    this.bms.packCurrentAmp = 4;
+    this.currentSlider.value = 4;
     for (let i = 0; i < this.maxHistory; i++) {
-      this.bms.updateTelemetry(0.08);
+      this.bms.updateTelemetry(0.05);
       this.bms.cells.forEach((c, idx) => {
         this.historyV[idx].push(c.vTerm);
       });
@@ -100,35 +102,35 @@ class VoltGuardApp {
 
     this.alertBanner.className = `alert-banner ${bannerClass}`;
     this.alertBanner.innerHTML = `
-      <span>🔋 BMS DIAGNOSTIC: ${t.faultDetail}</span>
+      <span>BMS Diagnostic: ${t.faultDetail}</span>
       <span>Fault Status: ${t.faultCode}</span>
     `;
 
-    this.kpiVpack.style.color = '#ff7733';
+    this.kpiVpack.style.color = '#18181b';
     this.kpiVpack.textContent = `${t.packVoltage.toFixed(2)} V`;
     this.kpiVpackSub.textContent = `Avg SoC: ${t.avgSoc}% | I = ${t.packCurrent.toFixed(1)} A`;
 
-    this.kpiDelta.style.color = t.deltaMV <= 35 ? '#a3e635' : '#ff5500';
+    this.kpiDelta.style.color = t.deltaMV <= 35 ? '#16a34a' : '#d97706';
     this.kpiDelta.textContent = `${t.deltaMV} mV`;
-    this.kpiDeltaSub.textContent = t.deltaMV <= 35 ? 'Balanced (< 35 mV)' : 'Imbalance Detected!';
+    this.kpiDeltaSub.textContent = t.deltaMV <= 35 ? 'Balanced (< 35 mV)' : 'Imbalance Detected';
 
-    this.kpiTemp.style.color = t.maxTemp >= 55 ? '#ff2a55' : '#a3e635';
+    this.kpiTemp.style.color = t.maxTemp >= 55 ? '#e11d48' : '#16a34a';
     this.kpiTemp.textContent = `${t.maxTemp}°C`;
-    this.kpiTempSub.textContent = `OTP Cutoff Threshold: 60.0°C`;
+    this.kpiTempSub.textContent = `OTP Cutoff: 60.0°C`;
 
-    this.kpiContactor.style.color = t.contactorClosed ? '#a3e635' : '#ff2a55';
+    this.kpiContactor.style.color = t.contactorClosed ? '#16a34a' : '#e11d48';
     this.kpiContactor.textContent = t.contactorClosed ? 'CLOSED (ON)' : 'TRIPPED OPEN';
     this.kpiContactorSub.textContent = t.contactorClosed ? 'HV Bus Energized' : 'Safety Cutoff Active';
 
-    this.btnToggleBal.className = `ev-btn ev-btn-wide ${this.bms.balancingEnabled ? 'btn-bal' : ''}`;
+    this.btnToggleBal.className = `btn-action ${this.bms.balancingEnabled ? 'btn-bal' : ''}`;
     this.btnToggleBal.textContent = this.bms.balancingEnabled
-      ? '⚡ Passive MOSFET Shunt Balancing: ACTIVE'
-      : '⚡ Enable MOSFET Shunt Cell Balancing';
+      ? 'Passive MOSFET Shunt Balancing: Active'
+      : 'Enable MOSFET Shunt Cell Balancing';
 
-    this.btnToggleFan.className = `ev-btn ev-btn-wide ${this.bms.coolingFanEnabled ? 'btn-bal' : ''}`;
+    this.btnToggleFan.className = `btn-action ${this.bms.coolingFanEnabled ? 'btn-bal' : ''}`;
     this.btnToggleFan.textContent = this.bms.coolingFanEnabled
-      ? '❄️ Active Liquid/Fan Thermal Cooling: ON (Reset OTP)'
-      : '❄️ Enable Active Thermal Cooling & Clear OTP';
+      ? 'Active Thermal Cooling: ON (Reset OTP)'
+      : 'Enable Active Thermal Cooling & Reset OTP';
 
     const signedCurr = this.bms.mode === 'CHARGE' ? this.bms.packCurrentAmp : -this.bms.packCurrentAmp;
     this.currentValTxt.textContent = `${signedCurr > 0 ? '+' : ''}${signedCurr.toFixed(0)} A (${this.bms.mode})`;
@@ -138,27 +140,25 @@ class VoltGuardApp {
 
   renderCells() {
     this.cellsGrid.innerHTML = this.bms.cells.map(c => {
-      const fillCol = c.tempC >= 58
-        ? 'linear-gradient(90deg, #991b1b, #ff2a55)'
-        : (c.shunting ? 'linear-gradient(90deg, #b45309, #ff5500)' : 'linear-gradient(90deg, #3f6212, #84cc16)');
+      const fillCol = c.tempC >= 58 ? '#e11d48' : (c.shunting ? '#d97706' : '#16a34a');
       return `
-        <div class="cell-pouch-row ${c.shunting ? 'shunting' : ''}">
-          <div class="pouch-top">
-            <span style="color:#ffffff;">POUCH CELL #0${c.id} // NMC-21700</span>
-            <span style="color:${c.tempC >= 55 ? '#ff2a55' : '#a3e635'}">TEMP: ${c.tempC.toFixed(1)}°C</span>
+        <div class="cell-card ${c.shunting ? 'shunting' : ''}">
+          <div class="cell-top">
+            <span class="cell-name">Cell 0${c.id} · NMC 21700</span>
+            <span class="cell-temp" style="color:${c.tempC >= 55 ? '#e11d48' : '#52525b'}">${c.tempC.toFixed(1)}°C</span>
           </div>
-          <div class="pouch-bar-track">
-            <div class="pouch-bar-fill" style="width:${c.soc}%;background:${fillCol};"></div>
-            <div class="pouch-bar-overlay">
-              <span>${c.vTerm.toFixed(3)} V</span>
-              <span>SoC: ${c.soc.toFixed(1)}%</span>
-            </div>
+          <div class="cell-main-readout">
+            <span class="cell-volt">${c.vTerm.toFixed(3)} V</span>
+            <span class="cell-soc">${c.soc.toFixed(1)}% SoC</span>
           </div>
-          <div class="pouch-shunt-status">
-            <span style="color:${c.shunting ? '#ff7733' : '#71717a'}">
-              ${c.shunting ? '🔥 MOSFET SHUNT BLEEDING (6.8Ω ON)' : '● SHUNT MOSFET: STANDBY OFF'}
+          <div class="cell-progress-track">
+            <div class="cell-progress-fill" style="width:${c.soc}%;background:${fillCol};"></div>
+          </div>
+          <div class="cell-foot">
+            <span class="shunt-pill ${c.shunting ? 'on' : ''}">
+              ${c.shunting ? '● Shunt Bleeding (6.8Ω)' : '○ Shunt Standby'}
             </span>
-            <span style="color:#a19eb5;">I_bleed: ${c.shunting ? (c.vTerm / 6.8).toFixed(2) : '0.00'} A</span>
+            <span>${c.shunting ? (c.vTerm / 6.8).toFixed(2) + ' A' : '0.00 A'}</span>
           </div>
         </div>
       `;
@@ -178,12 +178,14 @@ class VoltGuardApp {
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+    ctx.strokeStyle = '#f4f4f5';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let y = 20; y < h; y += 35) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+    for (let y = 24; y < h; y += 36) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+    for (let x = 0; x < w; x += 60) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
     ctx.stroke();
 
-    const colors = ['#38bdf8', '#10b981', '#f43f5e', '#a855f7'];
+    const colors = ['#2563eb', '#16a34a', '#d97706', '#7c3aed'];
     const vMin = 3.55;
     const vMax = 4.25;
 
@@ -195,17 +197,17 @@ class VoltGuardApp {
       for (let i = 0; i < arr.length; i++) {
         const x = (i / (this.maxHistory - 1)) * w;
         const norm = (arr[i] - vMin) / (vMax - vMin);
-        const y = h - 18 - Math.max(0, Math.min(1, norm)) * (h - 36);
+        const y = h - 18 - Math.max(0, Math.min(1, norm)) * (h - 38);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
     });
 
-    ctx.font = '700 11px JetBrains Mono, monospace';
+    ctx.font = '600 11px Inter, sans-serif';
     colors.forEach((col, idx) => {
       ctx.fillStyle = col;
-      ctx.fillText(`─── Cell ${idx + 1} (${this.bms.cells[idx].vTerm.toFixed(3)}V)`, 14 + idx * 155, 18);
+      ctx.fillText(`─── Cell 0${idx + 1} (${this.bms.cells[idx].vTerm.toFixed(3)}V)`, 14 + idx * 155, 20);
     });
   }
 
